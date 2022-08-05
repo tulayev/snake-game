@@ -11,6 +11,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "snake-game": "file:../pkg"
+  },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",
     "webpack": "^5.74.0",
