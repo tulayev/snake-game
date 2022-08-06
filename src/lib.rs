@@ -1,16 +1,9 @@
-use wasm_bindgen::prelude::*;
 use wee_alloc::WeeAlloc;
-
+use wasm_bindgen::prelude::*;
 
 #[global_allocator]
 static ALLOC: WeeAlloc = WeeAlloc::INIT;
 
-#[wasm_bindgen]
-pub struct Board {
-    width: usize,
-    size: usize,
-    snake: Snake
-}
 
 #[derive(PartialEq)]
 enum Direction {
@@ -27,6 +20,13 @@ struct Snake {
 
 struct SnakeCell(usize);
 
+#[wasm_bindgen]
+pub struct Board {
+    width: usize,
+    size: usize,
+    snake: Snake
+}
+    
 #[wasm_bindgen]
 impl Board {
     pub fn new(width: usize, spawn_index: usize) -> Board {
