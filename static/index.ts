@@ -4,10 +4,12 @@ const start = async () => {
     await init()
 
     const CELL_SIZE = 50
-    const board = Board.new()
+    const BOARD_WIDTH = 16
+    const spawnIndex = Date.now() % (BOARD_WIDTH * BOARD_WIDTH)
+    const board = Board.new(BOARD_WIDTH, spawnIndex)
     const boardWidth = board.width()
 
-    const canvas = document.getElementById('snakeCanvas')
+    const canvas = <HTMLCanvasElement>document.getElementById('snakeCanvas')
     const context = canvas.getContext('2d')
     
     canvas.width = canvas.height = boardWidth * CELL_SIZE
@@ -45,9 +47,23 @@ const start = async () => {
         context.stroke()
     }
 
-    drawBoard()
+    const draw = () => {
+        drawBoard()
+        drawSnake()
+    }
 
-    drawSnake()
+    const update = () => {
+        const fps = 10
+        setTimeout(() => {
+            context.clearRect(0, 0, canvas.width, canvas.height)
+            board.update()
+            draw()
+            requestAnimationFrame(update)
+        }, 1000 / fps)
+    }
+
+    draw()
+    update()
 }
 
 start()
