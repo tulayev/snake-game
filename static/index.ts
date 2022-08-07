@@ -1,4 +1,4 @@
-import init, { Board } from 'snake-game'
+import init, { Board, Direction } from 'snake-game'
 
 const start = async () => {
     await init()
@@ -14,6 +14,27 @@ const start = async () => {
     
     canvas.width = canvas.height = boardWidth * CELL_SIZE
     
+    document.addEventListener('keydown', (e) => {
+        switch (e.code) {
+            case 'ArrowUp':
+            case 'KeyW':
+                board.change_snake_dir(Direction.Up)
+            break
+            case 'ArrowDown':
+            case 'KeyS':
+                board.change_snake_dir(Direction.Down)
+            break
+            case 'ArrowRight':
+            case 'KeyD':
+                board.change_snake_dir(Direction.Right)
+            break
+            case 'ArrowLeft':
+            case 'KeyA':
+                board.change_snake_dir(Direction.Left)
+            break
+        }
+    })
+
     const drawBoard = () => {
         context.beginPath()
 

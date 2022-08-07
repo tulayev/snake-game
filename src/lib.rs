@@ -5,26 +5,42 @@ use wasm_bindgen::prelude::*;
 static ALLOC: WeeAlloc = WeeAlloc::INIT;
 
 
-#[derive(PartialEq)]
-enum Direction {
-    Up,
-    Down, 
-    Right, 
-    Left
-}
+struct SnakeCell(usize);
 
 struct Snake {
     body: Vec<SnakeCell>,
     direction: Direction
 }
 
-struct SnakeCell(usize);
+impl Snake {
+    fn new(spawn_index: usize, size: usize) -> Snake {
+        let mut body = vec!();
+
+        for i in 0..size {
+            body = vec!(SnakeCell(spawn_index - i));
+        }
+
+        Snake { 
+            body,
+            direction: Direction::Right
+        }
+    }
+}
 
 #[wasm_bindgen]
 pub struct Board {
     width: usize,
     size: usize,
     snake: Snake
+}
+
+#[wasm_bindgen]
+#[derive(PartialEq)]
+pub enum Direction {
+    Up,
+    Down, 
+    Right, 
+    Left
 }
     
 #[wasm_bindgen]
@@ -33,7 +49,7 @@ impl Board {
         Board { 
             width,
             size: width * width, 
-            snake: Snake::new(spawn_index)
+            snake: Snake::new(spawn_index, 3)
         }
     }
     
@@ -43,6 +59,10 @@ impl Board {
 
     pub fn snake_head_index(&self) -> usize {
         self.snake.body[0].0
+    }
+
+    pub fn change_snake_dir(&mut self, dir: Direction) {
+        self.snake.direction = dir
     }
 
     pub fn update(&mut self) {
@@ -66,14 +86,5 @@ impl Board {
         };
 
         self.snake.body[0].0 = row * self.width + col;
-    }
-}
-
-impl Snake {
-    fn new(spawn_index: usize) -> Snake {
-        Snake { 
-            body: vec!(SnakeCell(spawn_index)),
-            direction: Direction::Up
-        }
     }
 }
