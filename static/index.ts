@@ -1,18 +1,23 @@
 import init, { Board, Direction } from 'snake-game'
 
-const start = async () => {
-    await init()
+const CELL_SIZE = 50
+const BOARD_WIDTH = 16
 
-    const CELL_SIZE = 50
-    const BOARD_WIDTH = 16
+const start = async () => {
+    const wasm = await init()
+
     const spawnIndex = Date.now() % (BOARD_WIDTH * BOARD_WIDTH)
     const board = Board.new(BOARD_WIDTH, spawnIndex)
     const boardWidth = board.width()
 
     const canvas = <HTMLCanvasElement>document.getElementById('snakeCanvas')
+    canvas.width = canvas.height = boardWidth * CELL_SIZE
     const context = canvas.getContext('2d')
     
-    canvas.width = canvas.height = boardWidth * CELL_SIZE
+    const snakePartPtr = board.snake_parts()
+    const snakeLen = board.snake_len()
+
+    const snakeParts = new Uint32Array(wasm.memory.buffer, snakePartPtr, snakeLen)
     
     document.addEventListener('keydown', (e) => {
         switch (e.code) {
@@ -52,18 +57,22 @@ const start = async () => {
     }
 
     const drawSnake = () => {
-        const snakeIndex = board.snake_head_index()
-        const col = snakeIndex % boardWidth
-        const row = Math.floor(snakeIndex / boardWidth)
+        const snakeParts = new Uint32Array(wasm.memory.buffer, board.snake_parts(), board.snake_len())
 
-        context.beginPath()
+        snakeParts.forEach((p, i) => {
+            const col = p % boardWidth
+            const row = Math.floor(p / boardWidth)
+    
+            context.fillStyle = i === 0 ? '#dea584' : '#3178c6'
 
-        context.fillRect(
-            col * CELL_SIZE,
-            row * CELL_SIZE,
-            CELL_SIZE,
-            CELL_SIZE
-        )
+            context.beginPath()
+            context.fillRect(
+                col * CELL_SIZE,
+                row * CELL_SIZE,
+                CELL_SIZE,
+                CELL_SIZE
+            )
+        })
 
         context.stroke()
     }

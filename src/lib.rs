@@ -1,11 +1,10 @@
 use wee_alloc::WeeAlloc;
 use wasm_bindgen::prelude::*;
 
+
 #[global_allocator]
 static ALLOC: WeeAlloc = WeeAlloc::INIT;
 
-
-pub struct SnakePart(usize);
 
 struct Snake {
     body: Vec<SnakePart>,
@@ -26,6 +25,8 @@ impl Snake {
         }
     }
 }
+
+pub struct SnakePart(usize);
 
 #[wasm_bindgen]
 pub struct Board {
@@ -74,25 +75,27 @@ impl Board {
     }
 
     pub fn update(&mut self) {
-        let snake_index = self.snake_head_index();
-        
-        let (row, col) = (snake_index / self.width, snake_index % self.width);
+        let next_part = self.get_next_part();
+        self.snake.body[0] = next_part;
+    }
 
-        let (row, col) = match self.snake.direction {
+    fn get_next_part(&self) -> SnakePart {
+        let snake_index = self.snake_head_index();
+        let row = snake_index / self.width; 
+
+        return match self.snake.direction {
             Direction::Right => {
-                (row, (col + 1) % self.width)
+                SnakePart(row * self.width + (snake_index + 1) % self.width)
             },
             Direction::Left => {
-                (row, (col - 1) % self.width)
+                SnakePart(row * self.width + (snake_index - 1) % self.width)
             },
             Direction::Up => {
-                ((row - 1) % self.width, col)
+                SnakePart((snake_index - self.width) % self.size)
             },
             Direction::Down => {
-                ((row + 1) % self.width, col)
+                SnakePart((snake_index + self.width) % self.size)
             }
         };
-
-        self.snake.body[0].0 = row * self.width + col;
     }
 }
