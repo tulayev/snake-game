@@ -5,10 +5,10 @@ use wasm_bindgen::prelude::*;
 static ALLOC: WeeAlloc = WeeAlloc::INIT;
 
 
-struct SnakeCell(usize);
+pub struct SnakePart(usize);
 
 struct Snake {
-    body: Vec<SnakeCell>,
+    body: Vec<SnakePart>,
     direction: Direction
 }
 
@@ -17,7 +17,7 @@ impl Snake {
         let mut body = vec!();
 
         for i in 0..size {
-            body = vec!(SnakeCell(spawn_index - i));
+            body.push(SnakePart(spawn_index - i));
         }
 
         Snake { 
@@ -63,6 +63,14 @@ impl Board {
 
     pub fn change_snake_dir(&mut self, dir: Direction) {
         self.snake.direction = dir
+    }
+
+    pub fn snake_len(&self) -> usize {
+        self.snake.body.len()
+    }
+
+    pub fn snake_parts(&self) -> *const SnakePart {
+        self.snake.body.as_ptr()
     }
 
     pub fn update(&mut self) {
