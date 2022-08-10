@@ -1,4 +1,5 @@
 import init, { Board, Direction } from 'snake-game'
+import { random } from './utils/random'
 
 const CELL_SIZE = 50
 const BOARD_WIDTH = 16
@@ -6,7 +7,7 @@ const BOARD_WIDTH = 16
 const start = async () => {
     const wasm = await init()
 
-    const spawnIndex = Date.now() % (BOARD_WIDTH * BOARD_WIDTH)
+    const spawnIndex = random(BOARD_WIDTH * BOARD_WIDTH)
     const board = Board.new(BOARD_WIDTH, spawnIndex)
     const boardWidth = board.width()
 
@@ -56,6 +57,26 @@ const start = async () => {
         context.stroke()
     }
 
+    const drawRat = () => {
+        const position = board.get_rat()
+        const col = position % boardWidth
+        const row = Math.floor(position / boardWidth)
+
+        context.beginPath()
+        context.fillStyle = '#808080'
+        context.fillRect(
+            col * CELL_SIZE,
+            row * CELL_SIZE,
+            CELL_SIZE,
+            CELL_SIZE
+        )
+        context.stroke()
+
+        if (position === 1000) {
+            alert('Siz yutdingiz!')
+        }
+    }
+
     const drawSnake = () => {
         const snakeParts = new Uint32Array(wasm.memory.buffer, board.snake_parts(), board.snake_len())
 
@@ -64,7 +85,6 @@ const start = async () => {
             const row = Math.floor(p / boardWidth)
     
             context.fillStyle = i === 0 ? '#dea584' : '#3178c6'
-
             context.beginPath()
             context.fillRect(
                 col * CELL_SIZE,
@@ -80,6 +100,7 @@ const start = async () => {
     const draw = () => {
         drawBoard()
         drawSnake()
+        drawRat()
     }
 
     const update = () => {
