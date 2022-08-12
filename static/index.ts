@@ -1,4 +1,4 @@
-import init, { Board, Direction } from 'snake-game'
+import init, { Board, Direction, GameStatus } from 'snake-game'
 import { random } from './utils/random'
 
 const CELL_SIZE = 50
@@ -11,14 +11,22 @@ const start = async () => {
     const board = Board.new(BOARD_WIDTH, spawnIndex)
     const boardWidth = board.width()
 
+    const playBtn = document.getElementById('playBtn')
+    const gameStatus = document.getElementById('gameStatus')
+    const gamePoints = document.getElementById('gamePoints')
     const canvas = <HTMLCanvasElement>document.getElementById('snakeCanvas')
     canvas.width = canvas.height = boardWidth * CELL_SIZE
     const context = canvas.getContext('2d')
-    
-    const snakePartPtr = board.snake_parts()
-    const snakeLen = board.snake_len()
 
-    const snakeParts = new Uint32Array(wasm.memory.buffer, snakePartPtr, snakeLen)
+    playBtn.addEventListener('click', () => {
+        if (board.game_status() === undefined) {
+            playBtn.textContent = 'O\'ynalmoqda'
+            board.start_game()
+            play()
+        } else {
+            location.reload()
+        }
+    })
     
     document.addEventListener('keydown', (e) => {
         switch (e.code) {
@@ -71,50 +79,58 @@ const start = async () => {
             CELL_SIZE
         )
         context.stroke()
-
-        if (position === 1000) {
-            alert('Siz yutdingiz!')
-        }
     }
 
     const drawSnake = () => {
         const snakeParts = new Uint32Array(wasm.memory.buffer, board.snake_parts(), board.snake_len())
 
-        snakeParts.forEach((p, i) => {
-            const col = p % boardWidth
-            const row = Math.floor(p / boardWidth)
-    
-            context.fillStyle = i === 0 ? '#dea584' : '#3178c6'
-            context.beginPath()
-            context.fillRect(
-                col * CELL_SIZE,
-                row * CELL_SIZE,
-                CELL_SIZE,
-                CELL_SIZE
-            )
-        })
+        snakeParts
+            .filter((p, i) => !(i > 0 && p === snakeParts[0])) 
+            .forEach((p, i) => {
+                const col = p % boardWidth
+                const row = Math.floor(p / boardWidth)
+        
+                context.fillStyle = i === 0 ? '#dea584' : '#3178c6'
+                context.beginPath()
+                context.fillRect(
+                    col * CELL_SIZE,
+                    row * CELL_SIZE,
+                    CELL_SIZE,
+                    CELL_SIZE
+                )
+            })
 
         context.stroke()
+    }
+
+    const showGameStatus = () => {
+        gameStatus.textContent = board.game_status_text()
+        gamePoints.textContent = `${board.get_points()}`
     }
 
     const draw = () => {
         drawBoard()
         drawSnake()
         drawRat()
+        showGameStatus()
     }
 
-    const update = () => {
-        const fps = 10
+    const play = () => {
+        if (board.game_status() == GameStatus.Win || board.game_status() == GameStatus.Loose) {
+            playBtn.textContent = 'Qaytadan boshlash'
+            return
+        }
+
+        const steps = 10
         setTimeout(() => {
             context.clearRect(0, 0, canvas.width, canvas.height)
             board.update()
             draw()
-            requestAnimationFrame(update)
-        }, 1000 / fps)
+            requestAnimationFrame(play)
+        }, 1000 / steps)
     }
 
     draw()
-    update()
 }
 
 start()

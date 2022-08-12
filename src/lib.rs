@@ -35,12 +35,22 @@ impl Snake {
 pub struct SnakePart(usize);
 
 #[wasm_bindgen]
+#[derive(Clone, Copy)]
+pub enum GameStatus {
+    Win, 
+    Loose,
+    Playing
+}
+
+#[wasm_bindgen]
 pub struct Board {
     width: usize,
     size: usize,
     snake: Snake,
     next_part: Option<SnakePart>,
-    rat: usize
+    rat: Option<usize>,
+    status: Option<GameStatus>,
+    points: usize
 }
 
 #[wasm_bindgen]
@@ -64,10 +74,12 @@ impl Board {
             rat: Board::generate_rat(size, &snake.body),
             snake,
             next_part: Option::None,
+            status: Option::None,
+            points: 0
         }
     }
 
-    fn generate_rat(size: usize, snake_body: &Vec<SnakePart>) -> usize {
+    fn generate_rat(size: usize, snake_body: &Vec<SnakePart>) -> Option<usize> {
         let mut rat;
 
         loop {
@@ -78,14 +90,35 @@ impl Board {
             }
         }
 
-        rat
+        Option::Some(rat)
+    }
+
+    pub fn start_game(&mut self) {
+        self.status = Option::Some(GameStatus::Playing)
+    }
+
+    pub fn game_status(&self) -> Option<GameStatus> {
+        self.status
+    }
+
+    pub fn game_status_text(&self) -> String {
+        match self.status {
+            Option::Some(GameStatus::Win) => String::from("Siz yutdingiz!"),
+            Option::Some(GameStatus::Loose) => String::from("Siz yutqazdingiz!"),
+            Option::Some(GameStatus::Playing) => String::from("O'ynalmoqda"),
+            Option::None => String::from("")
+        }
     }
     
     pub fn width(&self) -> usize {
         self.width
     }
 
-    pub fn get_rat(&self) -> usize {
+    pub fn get_points(&self) -> usize {
+        self.points
+    }
+
+    pub fn get_rat(&self) -> Option<usize> {
         self.rat
     }
 
@@ -113,32 +146,41 @@ impl Board {
     }
 
     pub fn update(&mut self) {
-        let temp = self.snake.body.clone();
+        match self.status {
+            Some(GameStatus::Playing) => {
+                let temp = self.snake.body.clone();
 
-        match self.next_part {
-            Option::Some(part) => {
-                self.snake.body[0] = part;
-                self.next_part = Option::None;
+                match self.next_part {
+                    Option::Some(part) => {
+                        self.snake.body[0] = part;
+                        self.next_part = Option::None;
+                    },
+                    Option::None => {
+                        self.snake.body[0] = self.get_next_part(&self.snake.direction);
+                    }
+                }
+
+                for i in 1..self.snake.body.len() {
+                    self.snake.body[i] = SnakePart(temp[i - 1].0);
+                }
+
+                if self.snake.body[1..self.snake_len()].contains(&self.snake.body[0]) {
+                    self.status = Option::Some(GameStatus::Loose);
+                }
+
+                if self.rat == Option::Some(self.snake_head_index()) {
+                    if self.snake_len() < self.size {
+                        self.points += 1;
+                        self.rat = Board::generate_rat(self.size, &self.snake.body);
+                    } else {
+                        self.rat = Option::None;
+                        self.status = Option::Some(GameStatus::Win);
+                    }
+
+                    self.snake.body.push(SnakePart(self.snake.body[1].0));
+                }
             },
-            Option::None => {
-                self.snake.body[0] = self.get_next_part(&self.snake.direction);
-            }
-        }
-
-        let len = self.snake.body.len();
-
-        for i in 1..len {
-            self.snake.body[i] = SnakePart(temp[i - 1].0);
-        }
-
-        if self.rat == self.snake_head_index() {
-            if self.snake_len() < self.size {
-                self.rat = Board::generate_rat(self.size, &self.snake.body);
-            } else {
-                self.rat = 1000;
-            }
-
-            self.snake.body.push(SnakePart(self.snake.body[1].0));
+            _ => {}
         }
     }
 
